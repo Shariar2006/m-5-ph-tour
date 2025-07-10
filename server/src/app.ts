@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express'
 import cors from 'cors'
 import { router } from './app/routes'
+import { globalErrorHandler } from './app/middlewares/globalErrorHandle'
 
 const app = express()
 app.use(express.json())
@@ -13,5 +14,7 @@ app.get('/', (req: Request, res:Response)=>{
         message: 'welcome to the PH tour server'
     })
 })
+
+app.use(globalErrorHandler)
 
 export default app
