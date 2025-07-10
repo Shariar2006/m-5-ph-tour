@@ -2,9 +2,11 @@
 import { NextFunction, Request, Response } from "express";
 import httpStatus from 'http-status-codes'
 import { UserService } from "./user.service";
+import AppError from "../../errorHelpers/AppError";
 
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
+        // throw new Error('fake error')
         const user = await UserService.createUser(req.body)
 
         res.status(httpStatus.CREATED).json({
@@ -14,7 +16,7 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
 
     } catch (err: any) {
         console.log(err)
-next(err)
+        next(err)
         // res.status(httpStatus.BAD_REQUEST).json({
         //     message: `something went wrong ${error.message}`,
         //     error
