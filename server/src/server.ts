@@ -3,28 +3,32 @@ import mongoose from 'mongoose'
 import { Server } from 'http'
 import app from './app'
 import { envVars } from './app/config/env'
+import { seedSuperAdmin } from './app/utils/seedSuperAdmin'
 
 let server: Server
 
 const startServer = async () => {
     try {
         await mongoose.connect(envVars?.DB_URL)
-    console.log('connect DB')
-    app.listen(envVars.PORT, ()=>{
-        console.log(`serve is listening to port ${envVars.PORT}`)
-    })
+        console.log('connect DB')
+        app.listen(envVars.PORT, () => {
+            console.log(`serve is listening to port ${envVars.PORT}`)
+        })
     } catch (error) {
         console.log(error)
     }
 }
 
-startServer()
+(async () => {
+    await startServer()
+await seedSuperAdmin()
+})()
 
-process.on("SIGTERM", ()=>{
+process.on("SIGTERM", () => {
     console.log('SIGTERM signal... server shutting down')
 
-    if(server){
-        server.close(()=>{
+    if (server) {
+        server.close(() => {
             process.exit(1)
         })
     }
@@ -32,11 +36,11 @@ process.on("SIGTERM", ()=>{
     process.exit(1)
 })
 
-process.on("SIGINT", ()=>{
+process.on("SIGINT", () => {
     console.log('SIGTERM signal... server shutting down')
 
-    if(server){
-        server.close(()=>{
+    if (server) {
+        server.close(() => {
             process.exit(1)
         })
     }
@@ -44,11 +48,11 @@ process.on("SIGINT", ()=>{
     process.exit(1)
 })
 
-process.on("unhandledRejection", (err)=>{
+process.on("unhandledRejection", (err) => {
     console.log('unhandled rejection... server shutting down', err)
 
-    if(server){
-        server.close(()=>{
+    if (server) {
+        server.close(() => {
             process.exit(1)
         })
     }
@@ -56,11 +60,11 @@ process.on("unhandledRejection", (err)=>{
     process.exit(1)
 })
 
-process.on("uncaughtException", (err)=>{
+process.on("uncaughtException", (err) => {
     console.log('unhandled rejection... server shutting down', err)
 
-    if(server){
-        server.close(()=>{
+    if (server) {
+        server.close(() => {
             process.exit(1)
         })
     }
