@@ -9,4 +9,8 @@ export const userRoute = Router()
 userRoute.post('/register',
     zodValidation(createUserZodSchema)
     , UserControllers.createUser)
-userRoute.get('/all-users', UserControllers.getAllUser)
+userRoute.get('/all-users',
+    async (req: Request, res: Response, next: NextFunction) => {
+const accessToken = j
+    },
+    UserControllers.getAllUser)
