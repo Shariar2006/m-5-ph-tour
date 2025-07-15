@@ -1,10 +1,12 @@
 import { StatusCodes } from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
-import { IUser } from "../user/user.interface";
+import { IUser, IsActive } from "../user/user.interface";
 import { User } from "../user/user.model";
 import bcrypt from "bcryptjs";
+import { createUserTokens } from "../../utils/userTokens";
+import { verifyToken } from "../../utils/jwt";
 import { envVars } from "../../config/env";
-import { generateToken } from "../../utils/jwt";
+import { JwtPayload } from "jsonwebtoken";
 
 const credentialsLogin = async (payload: Partial<IUser>) => {
     const { email, password } = payload;
@@ -23,22 +25,43 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
         throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid password')
     }
 
-    const jwtPayload = {
-        userId: isUserExist?._id,
-        email: isUserExist?.email,
-        role: isUserExist?.role
-    }
+    const userTokens = createUserTokens(isUserExist)
 
-    const accessToken = generateToken(jwtPayload, envVars?.JWT_ACCESS_SECRET, envVars.JWT_ACCESS_EXPIRE)
-    const refreshToken = generateToken(jwtPayload, envVars?.JWT_REFRESH_SECRET, envVars.JWT_REFRESH_EXPIRE)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const {password:pass, ...rest} = isUserExist.toObject()
 
     return {
-        accessToken,
-        refreshToken,
-        isUserExist
+        accessToken: userTokens.accessToken,
+        refreshToken: userTokens.refreshToken,
+        user: rest,
     }
 }
 
+const getNewAccessToken = async (refreshToken: string) => {
+    
+    const verifiedToken = verifyToken(refreshToken, envVars.JWT_REFRESH_SECRET) as JwtPayload
+
+    const isUserExist = await User.findOne({ email: verifiedToken.email })
+
+    if (!isUserExist) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'User dose not exist')
+    }
+    if (isUserExist.isDeleted) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'User is deleted')
+    }
+    if (isUserExist.isActive === IsActive.BLOCKED || isUserExist.isActive === IsActive.INACTIVE) {
+        throw new AppError(StatusCodes.BAD_REQUEST, `User is ${isUserExist.isActive}`)
+    }
+
+    const userTokens = createUserTokens(isUserExist)
+
+    return {
+        accessToken: userTokens.accessToken,
+    }
+}
+
+
 export const AuthService = {
-    credentialsLogin
+    credentialsLogin,
+    getNewAccessToken
 }
