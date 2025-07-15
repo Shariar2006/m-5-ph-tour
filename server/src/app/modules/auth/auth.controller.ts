@@ -7,8 +7,15 @@ import { AuthService } from "./auth.service"
 
 
 const credentialsLogin = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-
-const loginInfo = await AuthService.credentialsLogin(req.body)
+    const loginInfo = await AuthService.credentialsLogin(req.body)
+    res.cookie('accessToken', loginInfo.accessToken,{
+        httpOnly: true,
+        secure: false
+    })
+    res.cookie('refreshToken', loginInfo.refreshToken,{
+        httpOnly: true,
+        secure: false
+    })
     sendResponse(res, {
         statusCode: StatusCodes.CREATED,
         success: true,
@@ -18,8 +25,8 @@ const loginInfo = await AuthService.credentialsLogin(req.body)
 })
 
 const getNewAccessToken = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-const refreshToken = req.headers.authorization as string
-const loginInfo = await AuthService.getNewAccessToken(refreshToken)
+    const refreshToken = req.cookies.refreshToken as string
+    const loginInfo = await AuthService.getNewAccessToken(refreshToken)
     sendResponse(res, {
         statusCode: StatusCodes.CREATED,
         success: true,
